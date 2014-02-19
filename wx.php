@@ -97,10 +97,10 @@ class wechatCallbackapiTest
                 if (strpos($keyword,'翻译') !== false && mb_substr($keyword,0,2,"UTF-8") == "翻译"){
                     $word       = mb_substr($keyword,2,220,"UTF-8");
                     $contentStr = $this->baiduDic($word);
-                }
-              
-                $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
+                }else{
+                    $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
                               "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳天气"."\n"."【2】 翻译，如输入：翻译+你好"."\n";
+                }
             }
             
             $resultStr  = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
