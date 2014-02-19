@@ -94,15 +94,13 @@ class wechatCallbackapiTest
                         $contentStr = "【".$data->weatherinfo->city."天气预报】\n".$data->weatherinfo->date_y." ".$data->weatherinfo->fchh."时发布"."\n\n实时天气\n".$data->weatherinfo->weather1." ".$data->weatherinfo->temp1." ".$data->weatherinfo->wind1."\n\n温馨提示：".$data->weatherinfo->index_d."\n\n明天\n".$data->weatherinfo->weather2." ".$data->weatherinfo->temp2." ".$data->weatherinfo->wind2."\n\n后天\n".$data->weatherinfo->weather3." ".$data->weatherinfo->temp3." ".$data->weatherinfo->wind3;
                     }
                 }
-                elseif (strpos($keyword,'翻译') !== false && mb_substr($keyword,0,2,"UTF-8") == "翻译"){
+                if (strpos($keyword,'翻译') !== false && mb_substr($keyword,0,2,"UTF-8") == "翻译"){
                     $word       = mb_substr($keyword,2,220,"UTF-8");
                     $contentStr = $this->baiduDic($word);
                 }
-                else{
-                    $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
-                              "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳天气"."\n";
-                }
-
+              
+                $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
+                              "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳天气"."\n"."【2】 翻译，如输入：翻译+你好"."\n";
             }
             
             $resultStr  = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
