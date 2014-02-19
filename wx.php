@@ -55,30 +55,19 @@ class wechatCallbackapiTest
 
     public function handleText($postObj)
     {
-        $fromUsername = $postObj->FromUserName;
-        $toUsername = $postObj->ToUserName;
-        $keyword = trim($postObj->Content);
-        $time = time();
-        $textTpl = "<xml>
-                    <ToUserName><![CDATA[%s]]></ToUserName>
-                    <FromUserName><![CDATA[%s]]></FromUserName>
-                    <CreateTime>%s</CreateTime>
-                    <MsgType><![CDATA[%s]]></MsgType>
-                    <Content><![CDATA[%s]]></Content>
-                    <FuncFlag>0</FuncFlag>
-                    </xml>";         
+        $keyword = trim($postObj->Content); 
 
         if(!empty( $keyword ))
         {
             $msgType    = "text";
 
-            if ($keyword == "nba")
+            if (strtolower($keyword) == "nba")
             {
                 $contentStr = "<a href='http://nba.sina.cn/'>NAB新闻</a>";
             }
-            elseif ($keyword == "国内")
+            elseif ($keyword == "新闻")
             {
-                $contentStr = "<a href='http://sina.cn/nc.php'>国内新闻</a>";
+                $contentStr = "<a href='http://3g.sina.com.cn/'>Sina新闻</a>";
             }else{
 
                 $str        = mb_substr($keyword,-2,2,"UTF-8");
@@ -94,21 +83,32 @@ class wechatCallbackapiTest
                         $contentStr = "【".$data->weatherinfo->city."天气预报】\n".$data->weatherinfo->date_y." ".$data->weatherinfo->fchh."时发布"."\n\n实时天气\n".$data->weatherinfo->weather1." ".$data->weatherinfo->temp1." ".$data->weatherinfo->wind1."\n\n温馨提示：".$data->weatherinfo->index_d."\n\n明天\n".$data->weatherinfo->weather2." ".$data->weatherinfo->temp2." ".$data->weatherinfo->wind2."\n\n后天\n".$data->weatherinfo->weather3." ".$data->weatherinfo->temp3." ".$data->weatherinfo->wind3;
                     }
                 }
-                if (strpos($keyword,'翻译') !== false && mb_substr($keyword,0,2,"UTF-8") == "翻译"){
+                elseif (strpos($keyword,'翻译') !== false && mb_substr($keyword,0,2,"UTF-8") == "翻译"){
                     $word       = mb_substr($keyword,2,220,"UTF-8");
                     $contentStr = $this->baiduDic($word);
                 }else{
-                    $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
-                              "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳天气"."\n"."【2】 翻译，如输入：翻译+你好"."\n";
+                   /*$contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
+                              "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳+天气"."\n"."【2】 翻译，如输入：翻译+你好"."\n"."【3】 看新闻，如输入：新闻或者nba"."\n";
+                              */
+                    $record=array(
+                        'title' =>'山塘街',
+                        'description' =>'山塘街东起阊门渡僧桥，西至苏州名胜虎丘山的望山桥，长约七里，所以苏州俗语说“七里山塘到虎丘”...',
+                        'picUrl' => 'http://thinkshare.duapp.com/images/suzhou.jpg',
+                        'url' =>'http://mp.weixin.qq.com/mp/appmsg/show?__biz=MjM5NDM0NTEyMg==&appmsgid=10000046&itemidx=1&sign=9e7707d5615907d483df33ee449b378d#wechat_redirect'
+                    );
                 }
             }
             
-            $resultStr  = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
+            //$resultStr  = $this->responseText($postObj,$contentStr);
+            //echo $resultStr;
+
+            $resultStr = response_news($postObj,$record);
             echo $resultStr;
         }else{
             echo "Input something...";
         }
     }
+
 
     public function handleEvent($object)
     {
@@ -116,7 +116,8 @@ class wechatCallbackapiTest
         switch ($object->Event)
         {
             case "subscribe":
-                $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n"."最前沿的新闻资讯，最新的实时交流。"."\n"."目前平台功能如下："."\n"."【1】 查军事，如输入：军事"."\n"."【2】 查国内新闻，如输入：国内新闻"."\n"."【3】 国外新闻，如输入：国外"."\n"."【4】 NBA，如输入：NBA"."\n"."更多内容，敬请期待...";
+                $contentStr = "感谢您关注【新闻志哥哥】"."\n"."微信号：xinwenzhigege"."\n".
+                              "目前平台功能如下："."\n"."【1】 查天气，如输入：深圳+天气"."\n"."【2】 翻译，如输入：翻译+你好"."\n"."【3】 看新闻，如输入：新闻或者nba"."\n";
                 break;
             default :
                 $contentStr = "Unknow Event: ".$object->Event;
@@ -126,6 +127,7 @@ class wechatCallbackapiTest
         return $resultStr;
     }
     
+    /*封装公共发送xml方法*/
     public function responseText($object, $content, $flag=0)
     {
         $textTpl = "<xml>
@@ -192,6 +194,42 @@ class wechatCallbackapiTest
         }
 
         return $file_contents;
+    }
+
+    public function response_news($object,$newsContent)
+    {
+        $newsTplHead = "<xml>
+                <ToUserName><![CDATA[%s]]></ToUserName>
+                <FromUserName><![CDATA[%s]]></FromUserName>
+                <CreateTime>%s</CreateTime>
+                <MsgType><![CDATA[news]]></MsgType>
+                <ArticleCount>1</ArticleCount>
+                <Articles>";
+        $newsTplBody = "<item>
+                <Title><![CDATA[%s]]></Title> 
+                <Description><![CDATA[%s]]></Description>
+                <PicUrl><![CDATA[%s]]></PicUrl>
+                <Url><![CDATA[%s]]></Url>
+                </item>";
+        $newsTplFoot = "</Articles>
+                <FuncFlag>0</FuncFlag>
+                </xml>";
+
+        //$newsTplHead
+        $header = sprintf($newsTplHead, $object->FromUserName, $object->ToUserName, time());
+
+        //newsTplBody
+        $title = $newsContent['title'];
+        $desc = $newsContent['description'];
+        $picUrl = $newsContent['picUrl'];
+        $url = $newsContent['url'];
+        $body = sprintf($newsTplBody, $title, $desc, $picUrl, $url);
+
+        //newsTplFoot
+        $FuncFlag = 0;
+        $footer = sprintf($newsTplFoot, $FuncFlag);
+
+        return $header.$body.$footer;
     }
 
     private function checkSignature()
